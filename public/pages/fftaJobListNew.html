@@ -27,22 +27,20 @@ var filtered_data;
 d3.json("ffta.json", function(tables) {
 
   mydata = tables;
-  var race = "Human"
-  filtered_data = mydata.nodes.filter(function(d){return d.race === race;});
+  var race = "Human";
+  filtered_data = mydata[race].nodes;
   var jobs = d3.select("#chart-container")
                 .selectAll(".job")
-                .data(filtered_data, function(d){return d.name+d.race;});
+                .data(filtered_data, function(d){return d.name + race});
 
   var jobsEnter = jobs.enter()
                 .append("div")
                 .attr("class", "job");
-                jobsEnter.append("div")
-                .attr("class", "name")
-                .text(function (d){return d.name;});
-                jobsEnter.append("div")
-                .attr("class", "race")
-                .text(function (d){return d.race;});
-                ;
+  jobsEnter.append("div")
+            .attr("class", "name")
+            .text(function (d){return d.name;});
+
+
 
 });
 
@@ -51,13 +49,13 @@ function showJobTree(race){
                 .attr("race");
   console.log(race);
 
-  filtered_data = mydata.nodes.filter(function(d){return d.race === race;});
+  filtered_data = mydata[race].nodes;
 
   console.log(filtered_data);
 
   var jobs = d3.select("#chart-container")
                 .selectAll(".job")
-                .data(filtered_data, function(d){return d.name+d.race;});
+                .data(filtered_data, function(d){return d.name + race});
 
   var jobsRemoved = jobs.exit()
                         .remove();
@@ -65,13 +63,9 @@ function showJobTree(race){
   var jobsEnter = jobs.enter()
                 .append("div")
                 .attr("class", "job");
-                jobsEnter.append("div")
-                .attr("class", "name")
-                .text(function (d){return d.name;});
-                jobsEnter.append("div")
-                .attr("class", "race")
-                .text(function (d){return d.race;});
-                ;
+  jobsEnter.append("div")
+            .attr("class", "name")
+            .text(function (d){return d.name;});
 
 
 
