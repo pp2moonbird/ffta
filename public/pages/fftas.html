@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>FFTA Simple</title>
+    <link rel="stylesheet" type="text/css" href="stylesheets/ffta.css"/>
+    <script src="javascripts/d3.v3.min.js" charset="utf-8"></script>
+	<script src="javascripts/sankey.js" charset="utf-8"></script>
+</head>
+
+<body>
+<h1>FFTA Simple</h1>
+
+<div id="container">
+	<div id="button-container">
+		<div class="button" race="Human">Human</div>
+		<div class="button" race="Viera">Viera</div>
+	</div>
+	<div id="chart-container"></div>
+</div>
+
+<script type="text/javascript">
+
+var mydata;
+var filtered_data;
+
+d3.json("ffta.json", function(tables) {
+
+  mydata = tables;
+  var race = "Human"
+  filtered_data = mydata.nodes.filter(function(d){return d.race === race;});
+  var jobs = d3.select("#chart-container")
+                .selectAll(".job")
+                .data(filtered_data, function(d){return d.name+d.race;});
+
+  var jobsEnter = jobs.enter()
+                .append("div")
+                .attr("class", "job");
+                jobsEnter.append("div")
+                .attr("class", "name")
+                .text(function (d){return d.name;});
+                jobsEnter.append("div")
+                .attr("class", "race")
+                .text(function (d){return d.race;});
+                ;
+
+});
+
+function showJobTree(race){
+  var race = d3.select(this)
+                .attr("race");
+  console.log(race);
+
+  filtered_data = mydata.nodes.filter(function(d){return d.race === race;});
+
+  console.log(filtered_data);
+
+  var jobs = d3.select("#chart-container")
+                .selectAll(".job")
+                .data(filtered_data, function(d){return d.name+d.race;});
+
+  var jobsRemoved = jobs.exit()
+                        .remove();
+
+  var jobsEnter = jobs.enter()
+                .append("div")
+                .attr("class", "job");
+                jobsEnter.append("div")
+                .attr("class", "name")
+                .text(function (d){return d.name;});
+                jobsEnter.append("div")
+                .attr("class", "race")
+                .text(function (d){return d.race;});
+                ;
+
+
+
+}
+
+
+d3.selectAll(".button")
+  .on("click", showJobTree);
+
+
+
+</script>
+
+</body>
+</html>
