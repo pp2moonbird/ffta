@@ -1,4 +1,5 @@
 import pandas as pd
+import itertools
 import json
 
 
@@ -16,24 +17,31 @@ def testCombineList():
 
 
 def combineList(a, b):
-    # result = list(set(a) | set(b))
-    result = list(set(a + b))
+    result = []
+    # result = list(set(a + b))
+    for x in itertools.chain.from_iterable([a, b]):
+        if x not in result:
+            result.append(x)
+    print(result)
     return result
 
 
 def writeSankeyJson(df):
-    df['source'] = df['race'] + '-' + df['source']
-    df['target'] = df['race'] + '-' + df['target']
+    raceList = df['race'].unique()
+    print(raceList)
+    finalJsonObject = {}
+    for race in raceList:
+        dfRace = df[df['race']==race]
 
-    nodeDistinctList = generateNodeDistinctList(df)
-    replaceDict = {v: i for i, v in enumerate(nodeDistinctList)}
-    df['source'].replace(replaceDict, inplace=True)
-    df['target'].replace(replaceDict, inplace=True)
+        nodeDistinctList = generateNodeDistinctList(dfRace)
+        replaceDict = {v: i for i, v in enumerate(nodeDistinctList)}
+        dfRace['source'].replace(replaceDict, inplace=True)
+        dfRace['target'].replace(replaceDict, inplace=True)
 
-
-    resultJson = generateJsonObject(df, nodeDistinctList)
-    f = open('ffta.json', 'w')
-    json.dump(resultJson, f)
+        resultJson = generateJsonObject(dfRace, nodeDistinctList)
+        finalJsonObject[race]=resultJson
+    f = open('fftaRace.json', 'w')
+    json.dump(finalJsonObject, f)
 
 
 def generateNodeDistinctList(df):
@@ -46,7 +54,7 @@ def generateNodeDistinctList(df):
 
 
 def generateJsonObject(dfResult, nodeDistinctList):
-    nodeArray = [{"name": x.split('-')[1], "race": x.split('-')[0]} for x in nodeDistinctList]
+    nodeArray = [{"name": x} for x in nodeDistinctList]
     # links array, array of dictionary [{'from':tableName1, 'to':tableName2, 'value':1}]
     linksJsonStr = dfResult.to_json(orient='records')
     linksJson = json.loads(linksJsonStr)
