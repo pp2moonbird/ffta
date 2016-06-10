@@ -5,7 +5,7 @@ import json
 
 def main():
     df = pd.read_excel('ffta.xlsx', 'jobTree')
-    writeSankeyJson(df)
+    writeCombinedSankeyJson(df)
     # testCombineList()
 
 
@@ -24,6 +24,30 @@ def combineList(a, b):
             result.append(x)
     print(result)
     return result
+
+# all races are in same nodes array and links array, front end will get right nodes array and links
+def writeCombinedSankeyJson(df):
+	df['source'] = df['race'] + '-' + df['source']
+	df['target'] = df['race'] + '-' + df['target']
+
+	nodeDistinctList = generateNodeDistinctList(df)
+	replaceDict = {v: i for i, v in enumerate(nodeDistinctList)}
+	df['source'].replace(replaceDict, inplace=True)
+	df['target'].replace(replaceDict, inplace=True)
+
+
+	resultJson = generateCombinedJsonObject(df, nodeDistinctList, replaceDict)
+	f = open('fftaCombined.json', 'w')
+	json.dump(resultJson, f)
+
+
+def generateCombinedJsonObject(dfResult, nodeDistinctList, replaceDict):
+	nodeArray = [{"name": x.split('-')[1], "race": x.split('-')[0], "id":replaceDict[x]} for x in nodeDistinctList]
+	# links array, array of dictionary [{'from':tableName1, 'to':tableName2, 'value':1}]
+	linksJsonStr = dfResult.to_json(orient='records')
+	linksJson = json.loads(linksJsonStr)
+	resultJson = {"nodes": nodeArray, "links": linksJson}
+	return resultJson
 
 
 def writeSankeyJson(df):
