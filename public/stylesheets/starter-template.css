@@ -1,0 +1,9 @@
+body {
+  padding-top: 20px;
+}
+.starter-template {
+  padding: 20px;
+  text-align: center;
+}
+
+.top-buffer { margin-top:20px; }
