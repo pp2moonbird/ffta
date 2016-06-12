@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Starter Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../stylesheets/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="../stylesheets/starter-template.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/ffta.css"/>
+    <script src="../javascripts/d3.v3.min.js" charset="utf-8"></script>
+    <script src="../javascripts/sankey.js" charset="utf-8"></script>
+
+  </head>
+
+  <body>
+
+<!--     <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Project name</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav> -->
+
+    <div class="container">
+
+      <div class="starter-template">
+        <h1>FFTA Races & Jobs</h1>
+        <p class="lead">For your quick reference.</p>
+
+      </div>
+	  <div id="races" class="row top-buffer">
+		<div class="btn-group">
+
+		</div>
+		</div>
+
+    <div id="jobTree" class="row top-buffer">
+
+		</div>
+
+
+		<div id="jobs" class="row top-buffer">
+				<div class="btn-group">
+
+		</div>
+
+		</div>
+
+	<div id="skills" class="row top-buffer">
+	</div>
+
+    </div><!-- /.container -->
+
+	<script>
+		var mydata = [];
+		var selectedRace;
+		var selectedJob;
+
+
+		d3.json("fftaSkill.json", function(tables) {
+		  mydata = tables;
+		  selectedRace = "Human";
+
+
+		container = d3.select('body').select('#races > .btn-group')
+				.selectAll('.btn')
+				.data(mydata)
+				.enter()
+				.append('button')
+				.attr('class', 'btn btn-default')
+				.attr('race', function(d){return d.name;})
+				.text(function(d){return d.name;})
+				.on("click", clickRaceButton);
+
+		selectedButton = d3.select('[race='+selectedRace+']');
+		selectedButton.attr('class', 'btn btn-primary active')
+
+		addJobButtons();
+    drawSankey();
+
+		});
+
+    function drawSankey(){
+			var sankeyData;
+      for(var i=0;i<mydata.length;i++){
+        if (mydata[i].name == selectedRace){
+          sankeyData = mydata[i].sankeyData;
+          break;
+        }
+      }
+
+			// console.log(selectedRace);
+			// console.log(sankeyData);
+      var svg = d3.select("#jobTree > svg");
+      svg.remove();
+
+      var margin = {top: 1, right: 1, bottom: 6, left: 1},
+          width = 400 - margin.left - margin.right,
+          height = 300 - margin.top - margin.bottom;
+
+      var formatNumber = d3.format(",.0f"),
+          format = function(d) { return formatNumber(d) + " TWh"; },
+          color = d3.scale.category20();
+
+      var svg = d3.select("#jobTree").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var sankey = d3.sankey()
+          .nodeWidth(15)
+          .nodePadding(10)
+          .size([width, height]);
+
+      var path = sankey.link();
+
+      sankey
+          .nodes(sankeyData.nodes)
+          .links(sankeyData.links)
+          .layout(32);
+
+      var link = svg.append("g").selectAll(".link")
+          .data(sankeyData.links)
+        .enter().append("path")
+          .attr("class", "link")
+          .attr("d", path)
+          .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+          .sort(function(a, b) { return b.dy - a.dy; });
+
+      link.append("title")
+          .text(function(d) { return d.value + " " + d.source.name + " → " + d.target.name + "\n"; });
+
+      var node = svg.append("g").selectAll(".node")
+          .data(sankeyData.nodes)
+        .enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+        // .call(d3.behavior.drag()
+        //   .origin(function(d) { return d; })
+        //   .on("dragstart", function() { this.parentNode.appendChild(this); })
+        //   .on("drag", dragmove))
+                  .on('click', clickJobButton)
+          ;
+
+      node.append("rect")
+          .attr("height", function(d) { return d.dy; })
+          .attr("width", sankey.nodeWidth())
+          .style("fill", function(d) { return d.color = d3.rgb(31, 119, 180); })
+          .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+        // .append("title")
+        //   .text(function(d) { return d.name; })
+          ;
+
+      node.append("text")
+          .attr("x", -6)
+          .attr("y", function(d) { return d.dy / 2; })
+          .attr("dy", ".35em")
+          .attr("text-anchor", "end")
+          .attr("transform", null)
+          .text(function(d) { return d.name; })
+        .filter(function(d) { return d.x < width / 2; })
+          .attr("x", 6 + sankey.nodeWidth())
+          .attr("text-anchor", "start");
+
+      // function dragmove(d) {
+      //   d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
+      //   sankey.relayout();
+      //   link.attr("d", path);
+      // }
+
+		}
+
+		function clickRaceButton(){
+			button = d3.select(this);
+			selectedRace = button.text();
+
+			previous_selected_button = d3.select('#races > .btn-group > .btn.btn-primary.active');
+			previous_selected_button.attr('class', 'btn btn-default');
+
+			selectedButton = d3.select('[race='+selectedRace+']');
+			selectedButton.attr('class', 'btn btn-primary active');
+
+			addJobButtons();
+      drawSankey();
+		}
+
+		function addJobButtons(){
+			var jobs = [];
+			for(var i=0;i<mydata.length;i++){
+				if (mydata[i].name == selectedRace){
+					jobs = mydata[i].jobs;
+					break;
+				}
+			}
+			<!-- console.log(jobs); -->
+			jobsSelection = d3.select("#jobs > .btn-group")
+					.selectAll(".btn")
+					.data(jobs, function(d){return d.race + d.jobName;});
+
+			jobsSelection.exit()
+				.remove();
+
+			jobsSelection.enter()
+				.append('button')
+				.attr('class', 'btn btn-default')
+				.attr('job', function(d){return d.jobName;})
+				.text(function(d){return d.jobName;})
+				.on('click', clickJobButton);
+
+			selectedJob = jobs[0].jobName;
+			<!-- console.log(selectedJob); -->
+
+			selectedButton = d3.select('[job='+selectedJob+']');
+			selectedButton.attr('class', 'btn btn-primary active');
+
+
+			addJobSkills();
+		}
+
+
+		function clickJobButton(){
+			button = d3.select(this);
+			selectedJob = button.text();
+
+			previous_selected_button = d3.select('#jobs > .btn-group > .btn.btn-primary.active');
+			previous_selected_button.attr('class', 'btn btn-default');
+
+			selectedButton = d3.select('[job='+selectedJob+']');
+			selectedButton.attr('class', 'btn btn-primary active');
+
+			addJobSkills();
+		}
+
+		function addJobSkills(){
+			var job;
+			console.log(selectedRace);
+			console.log(selectedJob);
+			for(var i=0;i<mydata.length;i++){
+				if (mydata[i].name == selectedRace){
+					jobs = mydata[i].jobs;
+					for(var j=0;j<jobs.length;j++){
+						if (jobs[j].jobName == selectedJob){
+
+							job = jobs[j];
+							break;
+						}
+					}
+				}
+			}
+			console.log(job);
+			var df = job.df;
+
+			drawTable(df);
+		}
+
+		function drawTable(df){
+			var table = d3.select("#skills > .table")
+			table.remove();
+
+			var table = d3.select("#skills")
+							.append("table");
+
+			table.attr("class", "table");
+
+			// add headers
+			theader = table.append("thead")
+							.append("tr");
+			theader.append("th")
+					.text("Name");
+					theader.append("th")
+					.text("Type");
+					theader.append("th")
+					.text("AP");
+					theader.append("th")
+					.text("Description");
+					theader.append("th")
+					.text("Weapon");
+
+			tbody = table.append("tbody")
+				.selectAll("tr");
+
+			tr = tbody.data(df)
+						.enter()
+						.append("tr");
+
+			tr.append("td")
+				.text(function(d){return d.skillName;})
+
+			tr.append("td")
+				.text(function(d){return d.skillType;});
+
+			tr.append("td")
+				.text(function(d){return d.CostOfAP;});
+
+			tr.append("td")
+				.text(function(d){return d.Description;});
+
+			tr.append("td")
+				.text(function(d){return d.Weapon;});
+
+
+		}
+
+
+	</script>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../javascripts/jquery.min.js"><\/script>')</script>
+    <script src="../javascripts/bootstrap.min.js"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-#button-container{
+/*#button-container{
 	float:left;
 	width: 100%;
 }
@@ -36,10 +36,15 @@
 
 #chart {
   height: 500px;
+}*/
+
+#jobTree {
+	margin-top:20px;
+
 }
 
 .node rect {
-  cursor: move;
+  /*cursor: move;*/
   fill-opacity: .9;
   shape-rendering: crispEdges;
 }
@@ -52,9 +57,9 @@
 .link {
   fill: none;
   stroke: #000;
-  stroke-opacity: .2;
+  stroke-opacity: .1;
 }
 
 .link:hover {
-  stroke-opacity: .5;
+  stroke-opacity: .3;
 }

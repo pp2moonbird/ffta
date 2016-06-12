@@ -20,6 +20,16 @@ fileDict = dict(zip(raceList, fileList))
 def main():
     saveRawHTML()
 
+
+    dfMapping = pd.read_excel('fftaJobNameMapping.xlsx')
+    dfMapping.drop_duplicates()
+    jobList = dfMapping['job'].tolist()
+    chineseJobList = dfMapping['chineseJobName'].tolist()
+    mappingDict = dict(zip(jobList, chineseJobList))
+    print(mappingDict)
+    print(dfMapping)
+
+
     # investigateNavigableString(tables)
     # investigateTag(tables)
     # testOneRace()
@@ -87,11 +97,23 @@ def main():
     for race in resultList:
         for job in race['jobs']:
             #job['jobName'] = race['name'] + '-' + job['jobName'] # TODO cutomize key
+            job['jobName'] = mappingDict[job['jobName']]
             job['race'] = race['name']
             df = job['df']
             dfJsonStr = df.to_json(orient='records')
             dfJson = json.loads(dfJsonStr)
             job['df'] = dfJson
+
+    # add sankeyDataJson
+    jobTreeJson = json.load(open('fftaRaceSplit.json'))
+
+    for raceObject in resultList:
+        raceName = raceObject['name']
+        for jobTreeObject in jobTreeJson:
+            if jobTreeObject['race'] == raceName:
+                raceObject['sankeyData'] = jobTreeObject['sankeyData']
+                break
+
 
     f = open('fftaSkill.json', 'w')
     json.dump(resultList, f)
