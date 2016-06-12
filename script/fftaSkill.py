@@ -18,13 +18,9 @@ fileList = [baseFolder + race + '.html' for race in raceList]
 fileDict = dict(zip(raceList, fileList))
 
 def main():
-    # print(raceList)
     saveRawHTML()
 
-
-
     # investigateNavigableString(tables)
-
     # investigateTag(tables)
     # testOneRace()
 
@@ -85,10 +81,7 @@ def main():
                     break;
             break;
 
-    for r in resultList:
-        print r['name']
-        for j in r['jobs']:
-            print '\t' + j['jobName']
+    # extractJobMappingRaw(resultList)
 
     # transform df to json object
     for race in resultList:
@@ -107,7 +100,23 @@ def main():
 
 
     # print
-	#
+
+
+def extractJobMappingRaw(resultList):
+    raceJobListForMapping = []
+    for r in resultList:
+        raceName = r['name']
+        print(r['name'])
+        for j in r['jobs']:
+            jobName = j['jobName']
+            raceJobListForMapping.append({'race': raceName, 'job': jobName})
+            print('\t' + j['jobName'])
+    dfRaceJobMapping = pd.DataFrame(raceJobListForMapping)
+    print(dfRaceJobMapping)
+    dfRaceJobMapping.to_csv('raceJobMapping.csv', encoding='utf-8')
+
+
+#
     # # modify blue mage
 	#
 
@@ -171,19 +180,19 @@ def extractSkillToDf(table):
 def investigateTag(tables):
     table = tables[0]
     tagChilds = [c for c in table.contents if type(c) == element.Tag]
-    print tagChilds[0]
-    print '==='
-    print tagChilds[0].text.strip()
-    print '======'
-    print tagChilds[1]
-    print '==='
-    print tagChilds[1].text.strip().split('\s')
-    print '======'
+    print(tagChilds[0])
+
+    print(tagChilds[0].text.strip())
+
+    print(tagChilds[1])
+
+    print(tagChilds[1].text.strip().split('\s'))
+
     tds = tagChilds[1].find_all('td')
     tdtextarray = [td.text for td in tds if type(td) == element.Tag]
-    print tdtextarray
+    print (tdtextarray)
     s = pd.Series(tdtextarray)
-    print s
+    print (s)
 
 
 def investigateNavigableString(tables):
